@@ -68,7 +68,7 @@ pub use crate::hook::{Debug, DebugNames, DebugSource, DebugStack, HookTriggers};
 pub use crate::lua::{Lua, StdLib};
 pub use crate::multi::Variadic;
 pub use crate::scope::Scope;
-pub use crate::string::String;
+pub use crate::string::{ByteString, String};
 pub use crate::table::{Table, TablePairs, TableSequence};
 pub use crate::thread::{Thread, ThreadStatus};
 pub use crate::types::{Integer, LightUserData, Number, RegistryKey};

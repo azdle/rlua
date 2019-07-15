@@ -8,7 +8,7 @@ use num_traits::cast;
 use crate::context::Context;
 use crate::error::{Error, Result};
 use crate::function::Function;
-use crate::string::String;
+use crate::string::{ByteString, String};
 use crate::table::Table;
 use crate::thread::Thread;
 use crate::types::{LightUserData, Number};
@@ -252,6 +252,26 @@ impl<'lua> FromLua<'lua> for CString {
 impl<'lua, 'a> ToLua<'lua> for &'a CStr {
     fn to_lua(self, lua: Context<'lua>) -> Result<Value<'lua>> {
         Ok(Value::String(lua.create_string(self.to_bytes())?))
+    }
+}
+
+impl<'lua, 'a> ToLua<'lua> for ByteString {
+    fn to_lua(self, lua: Context<'lua>) -> Result<Value<'lua>> {
+        Ok(Value::String(lua.create_string(&self)?))
+    }
+}
+
+impl<'lua> FromLua<'lua> for ByteString {
+    fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+        let ty = value.type_name();
+        Ok(lua.coerce_string(value)?
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: "String",
+                    message: Some("expected string or number".to_string()),
+                })?
+                .as_bytes().to_vec().into(),
+        )
     }
 }
 

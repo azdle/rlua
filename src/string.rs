@@ -1,4 +1,5 @@
-use std::{slice, str};
+use std::{slice, str, string::String as StdString};
+use std::ops::{Deref, DerefMut};
 
 use crate::error::{Error, Result};
 use crate::ffi;
@@ -105,5 +106,55 @@ where
 {
     fn eq(&self, other: &T) -> bool {
         self.as_bytes() == other.as_ref()
+    }
+}
+
+
+/// A Rust type wrapper for byte-strings.
+///
+/// Because Lua strings can contain arbitrary data, not limited to just UTF-8, they can't always be
+/// represented with the Rust `String` type. `ByteString` is a 'newtype' wrapper around a `Vec<u8>`
+/// that indicates it should be converted to a string in Lua instead of an array of numbers.
+#[derive(Clone, Debug)]
+pub struct ByteString(pub (crate) Vec<u8>);
+
+impl From<Vec<u8>> for ByteString {
+    fn from(vec: Vec<u8>) -> Self {
+        ByteString(vec)
+    }
+}
+
+impl From<StdString> for ByteString {
+    fn from(string: StdString) -> Self {
+        ByteString(string.into())
+    }
+}
+
+impl Deref for ByteString {
+    type Target = Vec<u8>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for ByteString {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl AsRef<[u8]> for ByteString {
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}
+
+impl<T> PartialEq<T> for ByteString
+where
+    T: AsRef<[u8]>,
+{
+    fn eq(&self, other: &T) -> bool {
+        self.0 == other.as_ref()
     }
 }
