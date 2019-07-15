@@ -15,6 +15,9 @@ use crate::types::{LightUserData, Number};
 use crate::userdata::{AnyUserData, UserData};
 use crate::value::{FromLua, Nil, ToLua, Value};
 
+#[cfg(feature = "byte-string-conversion")]
+use bytes::{Bytes, BytesMut};
+
 impl<'lua> ToLua<'lua> for Value<'lua> {
     fn to_lua(self, _: Context<'lua>) -> Result<Value<'lua>> {
         Ok(self)
@@ -252,6 +255,52 @@ impl<'lua> FromLua<'lua> for CString {
 impl<'lua, 'a> ToLua<'lua> for &'a CStr {
     fn to_lua(self, lua: Context<'lua>) -> Result<Value<'lua>> {
         Ok(Value::String(lua.create_string(self.to_bytes())?))
+    }
+}
+
+#[cfg(feature = "byte-string-conversion")]
+impl<'lua, 'a> ToLua<'lua> for Bytes {
+    fn to_lua(self, lua: Context<'lua>) -> Result<Value<'lua>> {
+        Ok(Value::String(lua.create_string(&self)?))
+    }
+}
+
+#[cfg(feature = "byte-string-conversion")]
+impl<'lua> FromLua<'lua> for Bytes {
+    fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+        let ty = value.type_name();
+        Ok(Bytes::from(
+            lua.coerce_string(value)?
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: "String",
+                    message: Some("expected string or number".to_string()),
+                })?
+                .as_bytes(),
+        ))
+    }
+}
+
+#[cfg(feature = "byte-string-conversion")]
+impl<'lua, 'a> ToLua<'lua> for BytesMut {
+    fn to_lua(self, lua: Context<'lua>) -> Result<Value<'lua>> {
+        Ok(Value::String(lua.create_string(&self)?))
+    }
+}
+
+#[cfg(feature = "byte-string-conversion")]
+impl<'lua> FromLua<'lua> for BytesMut {
+    fn from_lua(value: Value<'lua>, lua: Context<'lua>) -> Result<Self> {
+        let ty = value.type_name();
+        Ok(BytesMut::from(
+            lua.coerce_string(value)?
+                .ok_or_else(|| Error::FromLuaConversionError {
+                    from: ty,
+                    to: "String",
+                    message: Some("expected string or number".to_string()),
+                })?
+                .as_bytes(),
+        ))
     }
 }
 

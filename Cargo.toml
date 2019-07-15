@@ -14,7 +14,7 @@ license = "MIT"
 circle-ci = { repository = "kyren/rlua", branch = "master" }
 
 [features]
-default = ["builtin-lua"]
+default = ["builtin-lua", "byte-string-conversion"]
 # Builds the correct version of Lua 5.3 inside the crate. If you want to link a
 # specialized version of lua into your binary, you can disable this feature to
 # do that, but care must be taken.  `rlua` makes at least the following
@@ -31,11 +31,13 @@ builtin-lua = ["cc"]
 # the final binary manually.  The builtin-lua and system-lua features are
 # mutually exclusive and enabling both will cause an error at build time.
 system-lua = ["pkg-config"]
+byte-string-conversion = ["bytes"]
 
 [dependencies]
 libc = { version = "0.2" }
 num-traits = { version = "0.2.6" }
 bitflags = { version = "1.0.4" }
+bytes = { version = "0.4", optional = true }
 
 [build-dependencies]
 cc = { version = "1.0", optional = true }
@@ -49,3 +51,8 @@ compiletest_rs = { version = "0.3", features = ["stable"] }
 [[bench]]
 name = "benchmark"
 harness = false
+
+[[test]]
+name = "byte-string-conversion"
+path = "tests/byte_string.rs"
+required-features = ["byte-string-conversion"]
